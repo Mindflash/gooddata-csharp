@@ -13,4 +13,4 @@ There are two basic classes
 ##ApiWrapper
 Wraps most of the GoodData REST API.
 
-Most of the work was done by https://github.com/jkind/gooddata-csharp/network.
+Most of the work was done by https://github.com/jkind/gooddata-csharp.
