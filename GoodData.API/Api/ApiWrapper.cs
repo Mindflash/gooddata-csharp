@@ -8,6 +8,9 @@ using Newtonsoft.Json.Linq;
 using log4net;
 
 namespace GoodData.API.Api {
+	/// <summary>
+	/// Please see https://github.com/samfromlv/gooddata-csharp for sourse
+	/// </summary>
 	public class ApiWrapper : ApiWrapperBase {
 		private static readonly ILog Logger = LogManager.GetLogger(typeof(ApiWrapper));
 		//private readonly MandatoryUserFilter _mandatoryUserFilter = new MandatoryUserFilter();
