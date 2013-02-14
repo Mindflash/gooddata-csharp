@@ -10,6 +10,8 @@ using System.Text;
 using GoodData.API.Api.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.Collections.Specialized;
+using System.Web;
 
 namespace GoodData.API.Api
 {
@@ -66,8 +68,12 @@ namespace GoodData.API.Api
 			return policyErrors == SslPolicyErrors.None;
 		}
 
-		public string PostRequest(string url, object postData)
+		public string JsonPostRequest(string url, object postData)
 		{
+			return InternalPostRequest(url, postData, true);
+		}
+
+		public string FormPostRequest(string url, NameValueCollection postData) {
 			return InternalPostRequest(url, postData, true);
 		}
 
@@ -187,22 +193,50 @@ namespace GoodData.API.Api
 
 		private static void SetupPostData(HttpWebRequest webRequest, object postData)
 		{
+			if (postData is NameValueCollection) {
+				webRequest.ContentType = "application/x-www-form-urlencoded";
+				byte[] data = GetFormData((NameValueCollection)postData);
+				webRequest.ContentLength = data.LongLength;
+				using (Stream dataStream = webRequest.GetRequestStream()) {
+					dataStream.Write(data, 0, data.Length);
+				}
+			} else {
+				webRequest.ContentType = "application/json; charset=utf-8";
+				WriteJsonDataToRequest(webRequest, postData);
+			}
+		}
+
+		private static void WriteJsonDataToRequest(HttpWebRequest webRequest, object postData) {
 			StreamWriter requestWriter;
 			var jsonData = JsonConvert.SerializeObject(postData, Formatting.None,
-			                                           new JsonSerializerSettings
-			                                           	{
-			                                           		ContractResolver =
-			                                           			new CamelCasePropertyNamesContractResolver(),
-			                                           		NullValueHandling = NullValueHandling.Ignore
-			                                           	});
+																	 new JsonSerializerSettings {
+																		 ContractResolver =
+																			 new CamelCasePropertyNamesContractResolver(),
+																		 NullValueHandling = NullValueHandling.Ignore
+																	 });
 			//Send the data.
 			var encoding = new UTF8Encoding();
 			var dataBytes = encoding.GetBytes(jsonData);
 			webRequest.ContentLength = dataBytes.Length;
-			using (requestWriter = new StreamWriter(webRequest.GetRequestStream(), encoding))
-			{
+			using (requestWriter = new StreamWriter(webRequest.GetRequestStream(), encoding)) {
 				requestWriter.Write(jsonData);
 			}
+		}
+
+		private static byte[] GetFormData(NameValueCollection data) {
+			string value = string.Empty;
+			StringBuilder stringBuilder = new StringBuilder();
+			string[] allKeys = data.AllKeys;
+			for (int i = 0; i < allKeys.Length; i++) {
+				string text2 = allKeys[i];
+				stringBuilder.Append(value);
+				stringBuilder.Append(HttpUtility.UrlEncode(text2));
+				stringBuilder.Append("=");
+				stringBuilder.Append(HttpUtility.UrlEncode(data[text2]));
+				value = "&";
+			}
+			byte[] bytes = Encoding.ASCII.GetBytes(stringBuilder.ToString());
+			return bytes;
 		}
 
 		private void SetupRequest(HttpWebRequest webRequest, string method)
@@ -210,20 +244,20 @@ namespace GoodData.API.Api
 			webRequest.CookieContainer = CookieJar;
 			//Hack to fix cookies domain
 			//http://social.microsoft.com/Forums/en-US/netfxnetcom/thread/1297afc1-12d4-4d75-8d3f-7563222d234c
-			var table =
-				(Hashtable)
-				CookieJar.GetType().InvokeMember("m_domainTable",
-				                                 BindingFlags.NonPublic | BindingFlags.GetField | BindingFlags.Instance, null,
-				                                 CookieJar, new object[] {});
-			var keys = new ArrayList(table.Keys);
-			foreach (var key in keys)
-			{
-				if (!string.IsNullOrEmpty((string)key))
-				{
-					var newKey = ((string) key).Substring(1);
-					table[newKey] = table[key];
-				}
-			}
+			//var table =
+			//   (Hashtable)
+			//   CookieJar.GetType().InvokeMember("m_domainTable",
+			//                                    BindingFlags.NonPublic | BindingFlags.GetField | BindingFlags.Instance, null,
+			//                                    CookieJar, new object[] {});
+			//var keys = new ArrayList(table.Keys);
+			//foreach (var key in keys)
+			//{
+			//   if (!string.IsNullOrEmpty((string)key))
+			//   {
+			//      var newKey = ((string) key).Substring(1);
+			//      table[newKey] = table[key];
+			//   }
+			//}
 
 			webRequest.Method = method.ToUpper();
 			webRequest.ServicePoint.Expect100Continue = false;

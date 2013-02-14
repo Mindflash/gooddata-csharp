@@ -6,6 +6,7 @@ using GoodData.API.Api.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using log4net;
+using System.Collections.Specialized;
 
 namespace GoodData.API.Api {
 	/// <summary>
@@ -15,7 +16,8 @@ namespace GoodData.API.Api {
 		private static readonly ILog Logger = LogManager.GetLogger(typeof(ApiWrapper));
 		//private readonly MandatoryUserFilter _mandatoryUserFilter = new MandatoryUserFilter();
 
-		public ApiWrapper(GoodDataConfig config): base(config) {
+		public ApiWrapper(GoodDataConfig config)
+			: base(config) {
 		}
 
 
@@ -38,7 +40,7 @@ namespace GoodData.API.Api {
 					}
 				}
 			};
-			var response = PostRequest(url, payload);
+			var response = JsonPostRequest(url, payload);
 			var projectResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
 			return projectResponse.Uri.ExtractId(Constants.PROJECTS_URI);
 		}
@@ -99,7 +101,7 @@ namespace GoodData.API.Api {
 					Report = reportUri
 				}
 			};
-			var response = PostRequest(url, payload);
+			var response = JsonPostRequest(url, payload);
 			dynamic exportResponse = JsonConvert.DeserializeObject<object>(response);
 			return exportResponse.reportResult2.meta.uri;
 		}
@@ -115,7 +117,7 @@ namespace GoodData.API.Api {
 					Report = executeUri
 				}
 			};
-			var response = PostRequest(url, payload);
+			var response = JsonPostRequest(url, payload);
 			var exportResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
 			return exportResponse.Uri;
 		}
@@ -130,7 +132,7 @@ namespace GoodData.API.Api {
 					ExportData = Convert.ToInt16(exportData)
 				}
 			};
-			var response = PostRequest(url, payload);
+			var response = JsonPostRequest(url, payload);
 			var exportResponse = JsonConvert.DeserializeObject(response, typeof(ExportResponse)) as ExportResponse;
 			return exportResponse.ExportArtifact;
 		}
@@ -144,7 +146,7 @@ namespace GoodData.API.Api {
 					Uris = uris
 				}
 			};
-			var response = PostRequest(url, payload);
+			var response = JsonPostRequest(url, payload);
 			var exportResponse = JsonConvert.DeserializeObject(response, typeof(PartialExportResponse)) as PartialExportResponse;
 			return exportResponse.PartialMDArtifact;
 		}
@@ -158,7 +160,7 @@ namespace GoodData.API.Api {
 					Token = token
 				}
 			};
-			var response = PostRequest(url, payload);
+			var response = JsonPostRequest(url, payload);
 			var importResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
 			return importResponse.Uri;
 		}
@@ -175,7 +177,7 @@ namespace GoodData.API.Api {
 					UpdateLDMObjects = (updateLdmObjects) ? 1 : 0
 				}
 			};
-			var response = PostRequest(url, payload);
+			var response = JsonPostRequest(url, payload);
 			var importResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
 			return importResponse.Uri;
 		}
@@ -220,8 +222,9 @@ namespace GoodData.API.Api {
 
 		#region User
 
-		public string CreateUser(string login, string password, string verfiyPassword, string firstName, string lastName, string ssoProvider = "", string country = "US") {
+		public string CreateUser(string login, string password, string verfiyPassword, string firstName, string lastName, string ssoProvider = null, string country = "US") {
 			CheckAuthentication();
+
 			var url = Url.Combine(Config.ServiceUrl, Constants.DOMAIN_URI, Config.Domain, Constants.DOMAIN_USERS_SUFFIX);
 			var payload = new DomainUserRequest {
 				AccountSetting = new AccountSetting {
@@ -234,7 +237,7 @@ namespace GoodData.API.Api {
 					Country = country
 				}
 			};
-			var response = PostRequest(url, payload);
+			var response = JsonPostRequest(url, payload);
 			var userResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
 			return userResponse.Uri.ExtractId(Constants.PROFILE_URI);
 		}
@@ -253,11 +256,11 @@ namespace GoodData.API.Api {
 					return null;
 				}
 
-				var attributeElements = GetAttributeElements(projectId, attribute);
+				//var attributeElements = GetAttributeElements(projectId, attribute);
 
 				var elements = new List<Element>();
 				foreach (var elementTitle in item.Value) {
-					var fullAttribute = FindAttributeElementByTitle(projectId, attribute, elementTitle, attributeElements);
+					var fullAttribute = FindAttributeElementByTitle(projectId, attribute, elementTitle);
 					if (fullAttribute != null) {
 						elements.Add(fullAttribute);
 					}
@@ -271,7 +274,7 @@ namespace GoodData.API.Api {
 			}
 			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, "obj");
 			var payload = new UserFilterRequest(filterTitle, items, inclusive);
-			var response = PostRequest(url, payload);
+			var response = JsonPostRequest(url, payload);
 			var filterResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
 			return filterResponse.Uri;
 		}
@@ -279,7 +282,7 @@ namespace GoodData.API.Api {
 		public AssignUserFiltersUpdateResult AssignUserFilters(string projectId, List<string> userprofileIds, List<string> userFilterUris) {
 			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, "userfilters");
 			var payload = new AssignUserFilterRequest(userprofileIds, userFilterUris);
-			var response = PostRequest(url, payload);
+			var response = JsonPostRequest(url, payload);
 			var assignResponse = JsonConvert.DeserializeObject(response, typeof(AssignUserFilterResponse)) as AssignUserFilterResponse;
 			return assignResponse.UserFiltersUpdateResult;
 		}
@@ -308,14 +311,18 @@ namespace GoodData.API.Api {
 		public List<Element> GetAttributeElements(string projectId, Models.Attribute attribute) {
 			var url = Url.Combine(Config.ServiceUrl, attribute.Content.DisplayForms[0].Links.Elements);
 			var response = GetRequest(url);
-			var attributeElemntsResponse = JsonConvert.DeserializeObject(response, typeof(AttributeElemntsResponse)) as AttributeElemntsResponse;
+			var attributeElemntsResponse = JsonConvert.DeserializeObject(response, typeof(AttributeElementsResponse)) as AttributeElementsResponse;
 			return attributeElemntsResponse.AttributeElements.Elements;
 		}
 
-		public Element FindAttributeElementByTitle(string projectId, Models.Attribute attribute, string elementTitle, List<Element> elements = null) {
-			if (elements == null)
-				elements = GetAttributeElements(projectId, attribute);
-			return elements.FirstOrDefault(x => x.Title.Equals(elementTitle, StringComparison.OrdinalIgnoreCase));
+		public Element FindAttributeElementByTitle(string projectId, Models.Attribute attribute, string elementTitle) {
+			var url = Url.Combine(Config.ServiceUrl, attribute.Content.DisplayForms[0].Links.Elements);
+			var response = FormPostRequest(url, new NameValueCollection { { "filter", elementTitle } });
+			var attributeElemntsResponse = JsonConvert.DeserializeObject(response, typeof(AttributeElementsResponse)) as AttributeElementsResponse;
+			return attributeElemntsResponse
+				.AttributeElements
+				.Elements
+				.FirstOrDefault(x => x.Title.Equals(elementTitle, StringComparison.OrdinalIgnoreCase));
 		}
 
 		public List<ProjectRole> GetRoles(string projectId) {
@@ -361,7 +368,7 @@ namespace GoodData.API.Api {
 					}
 				}
 			};
-			PostRequest(url, payload);
+			JsonPostRequest(url, payload);
 		}
 
 		public void UpdateProjectUserAccess(string projectId, string profileId, bool enabled, string roleName = SystemRoles.DashboardOnly) {
@@ -379,14 +386,14 @@ namespace GoodData.API.Api {
 					}
 				}
 			};
-			PostRequest(url, payload);
+			JsonPostRequest(url, payload);
 		}
 
 		public void UpdateProfileSettings(string projectId, string profileId) {
 			CheckAuthentication();
 			var url = Url.Combine(Config.ServiceUrl, Constants.PROFILE_URI, profileId, Constants.PROFILE_SETTINGS_SUFFIX);
 			var payload = ProfileSettingsRequest.CreateUSFormat();
-			PostRequest(url, payload);
+			JsonPostRequest(url, payload);
 		}
 
 		public void UpdateSSOProvider(string profileId) {
@@ -540,7 +547,7 @@ namespace GoodData.API.Api {
 			var url = Url.Combine(Config.ServiceUrl, projectId, Constants.IDENTIFIER_URI);
 
 			var payload = identifiers;
-			var response = PostRequest(url, payload);
+			var response = JsonPostRequest(url, payload);
 			return JsonConvert.DeserializeObject(response, typeof(IdentifiersResponse)) as IdentifiersResponse;
 		}
 

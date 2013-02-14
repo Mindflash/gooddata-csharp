@@ -2,7 +2,7 @@
 
 namespace GoodData.API.Api.Models
 {
-	public class AttributeElemntsResponse
+	public class AttributeElementsResponse
 	{
 		public AttributeElements AttributeElements { get; set; }
 		public ElementsMeta ElementsMeta { get; set; }

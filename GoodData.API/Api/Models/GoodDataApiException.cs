@@ -9,5 +9,9 @@ namespace GoodData.API.Api.Models
 			: base(message)
 		{
 		}
+
+		public GoodDataApiException(string message, Exception inner)
+			: base(message,inner) {
+		}
 	}
 }

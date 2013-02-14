@@ -25,7 +25,7 @@ namespace GoodData.API.Api
 
 			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, "userfilters");
 			var payload = new AssignUserFilterRequest(new[] {userUri}, filterUris.ToList());
-			var response = PostRequest(url, payload);
+			var response = JsonPostRequest(url, payload);
 
 			Logger.DebugFormat("END MandatoryUserFilter.Assign Response={0}", response);
 		}
@@ -44,7 +44,7 @@ namespace GoodData.API.Api
 							                           Meta = new UserFilterMeta {Title = title}
 						                           }
 				              };
-			var response = PostRequest(url, request);
+			var response = JsonPostRequest(url, request);
 			var filterResponse = JsonConvert.DeserializeObject<UriResponse>(response);
 
 			Logger.DebugFormat("END MandatoryUserFilter.Create");
@@ -97,7 +97,7 @@ namespace GoodData.API.Api
 			if (null != newTitle)
 				filter.UserFilter.Meta.Title = newTitle;
 
-			PostRequest(url, filter);
+			JsonPostRequest(url, filter);
 
 			Logger.DebugFormat("END MandatoryUserFilter.Update");
 		}
