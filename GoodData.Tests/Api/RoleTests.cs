@@ -33,7 +33,7 @@ namespace GoodDataTests.Api
 			var email = string.Format("tester+{0}@{1}.com", DateTime.Now.Ticks, ReportingService.Config.Domain);
 			var profileId = CreateTestUser(email);
 			var projectId = GetTestProjectId();
-			ReportingService.AddUsertoProject(projectId, profileId);
+			ReportingService.AddUserToProjectWithRoleByTitle(projectId, profileId);
 			ReportingService.UpdateProjectUserAccess(projectId, profileId, true,SystemRoles.Editor);
 			var user = ReportingService.FindProjectUsersByEmail(projectId,email);
 			var editorRole = ReportingService.FindRoleByTitle(projectId, SystemRoles.Editor);

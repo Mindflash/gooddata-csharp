@@ -246,17 +246,45 @@ namespace GoodData.API.Api {
 			DeleteObjectByTitle(projectId, filterTitle, ObjectTypes.UserFilter);
 		}
 
-		public string CreateUserFilter(string projectId, string filterTitle, Dictionary<string, List<string>> fillterCollection, bool inclusive = true) {
+		public string CreateUserFilterUsingAttributeTitles(string projectId, string filterTitle, Dictionary<string, List<string>> attributeTitlesWithElementTitles, bool inclusive = true) {
 			var items = new Dictionary<string, List<string>>();
 			var attributes = Query(projectId, ObjectTypes.Attribute);
-			foreach (var item in fillterCollection) {
+			foreach (var item in attributeTitlesWithElementTitles) {
 				var attribute = FindAttributeByTitle(projectId, item.Key, attributes);
 				if (attribute == null) {
 					Logger.WarnFormat("No attribute found with title {0}", item.Key);
 					return null;
 				}
 
-				//var attributeElements = GetAttributeElements(projectId, attribute);
+				var elements = new List<Element>();
+				foreach (var elementTitle in item.Value) {
+					var fullAttribute = FindAttributeElementByTitle(projectId, attribute, elementTitle);
+					if (fullAttribute != null) {
+						elements.Add(fullAttribute);
+					}
+
+				}
+				if (elements.Count == 0) {
+					Logger.WarnFormat("No element {0} found for attribute {1}", string.Join(",", item.Value), attribute.Meta.Identifier);
+					return null;
+				}
+				items.Add(attribute.Meta.Uri, elements.Select(element => element.Uri).ToList());
+			}
+			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, "obj");
+			var payload = new UserFilterRequest(filterTitle, items, inclusive);
+			var response = JsonPostRequest(url, payload);
+			var filterResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
+			return filterResponse.Uri;
+		}
+
+		public string CreateUserFilterUsingAttributeUris(string projectId, string filterTitle, Dictionary<string, List<string>> attributeUrisWithElementTitles, bool inclusive = true) {
+			var items = new Dictionary<string, List<string>>();
+			foreach (var item in attributeUrisWithElementTitles) {
+				var attribute = GetAttributeByUri(item.Key);
+				if (attribute == null) {
+					Logger.WarnFormat("No attribute found with title {0}", item.Key);
+					return null;
+				}
 
 				var elements = new List<Element>();
 				foreach (var elementTitle in item.Value) {
@@ -299,8 +327,11 @@ namespace GoodData.API.Api {
 			if (attributes == null)
 				return null;
 			attributes = attributes.FindByTitle((attributeTitle ?? "").Trim());
+			return GetAttributeByUri(attributes.First().Link);
+		}
 
-			var url = Url.Combine(Config.ServiceUrl, attributes.First().Link);
+		public Models.Attribute GetAttributeByUri(string attributeUri) {
+			var url = Url.Combine(Config.ServiceUrl, attributeUri);
 			var response = GetRequest(url);
 			var settings = new JsonSerializerSettings();
 			settings.Converters.Add(new BoolConverter());
@@ -345,7 +376,7 @@ namespace GoodData.API.Api {
 				GetRoles(projectId).FirstOrDefault(r => r.Meta.Identifier.Equals(systemRole, StringComparison.OrdinalIgnoreCase));
 		}
 
-		public void AddUsertoProject(string projectId, string userId, string roleName = SystemRoles.DashboardOnly) {
+		public void AddUserToProjectWithRoleByTitle(string projectId, string userId, string roleName = SystemRoles.DashboardOnly) {
 			CheckAuthentication();
 
 			var projectRole = FindRoleByTitle(projectId, roleName);
@@ -354,14 +385,25 @@ namespace GoodData.API.Api {
 			}
 			var url = Url.Combine(Config.ServiceUrl, Constants.PROJECTS_URI, projectId, Constants.PROJECT_USERS_SUFFIX);
 
+			string roleUri = Url.Combine(Constants.PROJECTS_URI, projectId, Constants.PROJECT_ROLES_SUFFIX, projectRole.RoleId);
+
+			ExecuteAddRoleRequest(userId, url, roleUri);
+		}
+
+		public void AddUserToProjectWithRoleByUri(string projectId, string userId, string roleUri) {
+			CheckAuthentication();
+
+			var url = Url.Combine(Config.ServiceUrl, Constants.PROJECTS_URI, projectId, Constants.PROJECT_USERS_SUFFIX);
+
+			ExecuteAddRoleRequest(userId, url, roleUri);
+		}
+
+		private void ExecuteAddRoleRequest(string userId, string url, string roleUri) {
 			var payload = new ProjectUserRequest {
 				User = new ProjectUserRequest.UserRequest {
 					Content = new ProjectUserRequest.UserRequest.ContentRequest {
 						Status = "ENABLED",
-						UserRoles = new List<string>
-			              		       		          		            	{
-			              		       		          		            		Url.Combine(Constants.PROJECTS_URI, projectId, Constants.PROJECT_ROLES_SUFFIX, projectRole.RoleId)
-			              		       		          		            	}
+						UserRoles = new List<string> { roleUri }
 					},
 					Links = new ProjectUserRequest.UserRequest.LinksRequest {
 						Self = Url.Combine(Constants.PROFILE_URI, userId)

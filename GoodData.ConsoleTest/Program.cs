@@ -10,8 +10,7 @@ namespace GoodData.ConsoleTest {
 
 		static void Main(string[] args) {
 
-
-
+			
 	
 
 		}

@@ -30,7 +30,7 @@ namespace GoodDataTests.Api
 			var email = string.Format("gooddata@{0}.com", ReportingService.Config.Domain);
 			var domainUser = ReportingService.FindDomainUsersByLogin(email);
 			var projectUser = ReportingService.FindProjectUsersByEmail(project.ProjectId, email);
-			ReportingService.AddUsertoProject(project.ProjectId, domainUser.ProfileId, SystemRoles.Editor);
+			ReportingService.AddUserToProjectWithRoleByTitle(project.ProjectId, domainUser.ProfileId, SystemRoles.Editor);
 		}
 
 		[Test]
@@ -65,7 +65,7 @@ namespace GoodDataTests.Api
 			Assert.IsNotNullOrEmpty(newProfileId);
 
 			var project = ReportingService.FindProjectByTitle(TestProjectName);
-			ReportingService.AddUsertoProject(project.ProjectId, newProfileId);
+			ReportingService.AddUserToProjectWithRoleByTitle(project.ProjectId, newProfileId);
 
 			CheckUserIsInProject(login);
 		}
@@ -84,7 +84,7 @@ namespace GoodDataTests.Api
 
 			var projectTitle = "CreateUserTest";
 			var projectId = ReportingService.CreateProject(projectTitle, "Create User Test Summary");
-			ReportingService.AddUsertoProject(projectId, newProfileId, SystemRoles.Admin);
+			ReportingService.AddUserToProjectWithRoleByTitle(projectId, newProfileId, SystemRoles.Admin);
 
 			var user = ReportingService.FindProjectUsersByEmail(projectId, login);
 			Assert.NotNull(user);
@@ -159,10 +159,10 @@ namespace GoodDataTests.Api
 			Assert.IsNotNullOrEmpty(newProfileId);
 
 			var projectId = GetTestProjectId();
-			ReportingService.AddUsertoProject(projectId, newProfileId, SystemRoles.Viewer);
+			ReportingService.AddUserToProjectWithRoleByTitle(projectId, newProfileId, SystemRoles.Viewer);
 
 			var filterTitle = login;
-			var response = ReportingService.CreateUserFilter(projectId, filterTitle, filterCollection, inclusive);
+			var response = ReportingService.CreateUserFilterUsingAttributeUris(projectId, filterTitle, filterCollection, inclusive);
 			Assert.IsNotNullOrEmpty(response);
 			var filter = ReportingService.GetObject(response);
 			Assert.IsNotNull(filter);
@@ -197,7 +197,7 @@ namespace GoodDataTests.Api
 
 			var projectTitle = "CreateUserTest";
 			var projectId = ReportingService.CreateProject(projectTitle, "Create User Test Summary");
-			ReportingService.AddUsertoProject(projectId, newProfileId, SystemRoles.Admin);
+			ReportingService.AddUserToProjectWithRoleByTitle(projectId, newProfileId, SystemRoles.Admin);
 
 			var user = ReportingService.FindProjectUsersByEmail(projectId, login);
 			Assert.NotNull(user);
@@ -251,7 +251,7 @@ namespace GoodDataTests.Api
 			var max = Math.Min(domainUsers.Count, 2);
 			for (var i = 0; i < max; i++)
 			{
-				ReportingService.AddUsertoProject(projectId, domainUsers[i].AccountSetting.ProfileId);
+				ReportingService.AddUserToProjectWithRoleByTitle(projectId, domainUsers[i].AccountSetting.ProfileId);
 			}
 			var users = ReportingService.GetProjectUsers(projectId);
 			if (users == null)
