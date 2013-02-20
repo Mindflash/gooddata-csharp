@@ -12,7 +12,7 @@ namespace GoodData.API.Api {
 	/// <summary>
 	/// Please see https://github.com/samfromlv/gooddata-csharp for sourse
 	/// </summary>
-	public class ApiWrapper : ApiWrapperBase {
+	public class ApiWrapper : ApiWrapperBase, IApiWrapper {
 		private static readonly ILog Logger = LogManager.GetLogger(typeof(ApiWrapper));
 		//private readonly MandatoryUserFilter _mandatoryUserFilter = new MandatoryUserFilter();
 

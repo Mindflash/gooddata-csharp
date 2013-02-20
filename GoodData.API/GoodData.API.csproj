@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="Api\ApiWrapper.cs" />
     <Compile Include="Api\ApiWrapperBase.cs" />
+    <Compile Include="Api\IApiWrapper.cs" />
     <Compile Include="Api\MandatoryUserFilter.cs" />
     <Compile Include="Api\Models\AttributeResponse.cs" />
     <Compile Include="Api\Models\AttributeElemntsResponse.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="Api\Models\QueryResponse.cs" />
     <Compile Include="SSO\DefaultPgpProcessor.cs" />
     <Compile Include="SSO\IGoodDataPgpProcessor.cs" />
+    <Compile Include="SSO\ISsoProvider.cs" />
     <Compile Include="SSO\SSOProvider.cs" />
     <Compile Include="StringExtension.cs" />
     <Compile Include="Api\Models\UsingResponse.cs" />

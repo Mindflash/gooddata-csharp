@@ -5,7 +5,7 @@ using GoodData.Security.OpenPGP;
 using GoodData.API.API.SSO;
 
 namespace GoodData.API.SSO {
-	public class SsoProvider {
+	public class SsoProvider : ISsoProvider {
 		private System.Object lockThis = new System.Object();
 		private IGoodDataPgpProcessor pgpProcessor;
 
