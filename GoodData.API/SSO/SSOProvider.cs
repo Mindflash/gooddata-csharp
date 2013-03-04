@@ -19,23 +19,19 @@ namespace GoodData.API.SSO {
 		}
 
 		public string GenerateToken(string email, int validaityOffsetInMinutes = 10) {
-			var userData = CreateUserData(email);
+			var userData = CreateUserData(email, validaityOffsetInMinutes);
 
 			lock (lockThis) {
 				var signedData = pgpProcessor.Sign(userData);
 				var encryptedData = pgpProcessor.Encrypt(signedData);
-				return EncodeUserData(encryptedData);
+				return encryptedData;
 			}
 		}
 
 
 		private static string CreateUserData(string email, int validaityOffsetInMinutes = 10) {
 			return "{\"email\":\"" + email + "\",\"validity\":" +
-					 Math.Round(DateTime.UtcNow.AddMinutes(validaityOffsetInMinutes).ToUnixTime()) + "}";
-		}
-
-		private static string EncodeUserData(string input) {
-			return HttpUtility.UrlEncode(input);
+					 DateTime.UtcNow.AddMinutes(validaityOffsetInMinutes).ToUnixTimeStamp() + "}";
 		}
 	}
 }

@@ -4,6 +4,12 @@ namespace GoodData.API
 {
 	public static class Extensions
 	{
+		public static DateTime UnixEpochStartDate {
+			get {
+				return new DateTime(1970, 1, 1);
+			}
+		}
+
 		public static string ExtractId(this string value, string replacePath)
 		{
 			return value.Replace(replacePath, string.Empty).Replace("/", string.Empty);
@@ -15,14 +21,8 @@ namespace GoodData.API
 			return value.Substring(startIndex, value.Length - startIndex);
 		}
 
-		/// <summary>
-		/// 	Use Universal time.
-		/// </summary>
-		/// <param name = "dateTime"></param>
-		/// <returns></returns>
-		public static double ToUnixTime(this DateTime dateTime)
-		{
-			return (dateTime - new DateTime(1970, 1, 1).ToLocalTime()).TotalSeconds;
+		public static int ToUnixTimeStamp(this DateTime date) {
+			return (int)(date - UnixEpochStartDate).TotalSeconds;
 		}
 	}
 }
