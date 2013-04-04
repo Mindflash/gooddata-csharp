@@ -278,12 +278,12 @@ namespace GoodData.API.Api {
 		}
 
 		public string CreateUserFilterUsingAttributeUris(string projectId, string filterTitle, Dictionary<string, List<string>> attributeUrisWithElementTitles, bool inclusive = true) {
+			
 			var items = new Dictionary<string, List<string>>();
 			foreach (var item in attributeUrisWithElementTitles) {
 				var attribute = GetAttributeByUri(item.Key);
 				if (attribute == null) {
-					Logger.WarnFormat("No attribute found with title {0}", item.Key);
-					return null;
+					throw new GoodDataApiException(String.Format("No attribute found with title {0}", item.Key), GoodDataErrorType.AttributeNotFound);
 				}
 
 				var elements = new List<Element>();
@@ -295,8 +295,8 @@ namespace GoodData.API.Api {
 
 				}
 				if (elements.Count == 0) {
-					Logger.WarnFormat("No element {0} found for attribute {1}", string.Join(",", item.Value), attribute.Meta.Identifier);
-					return null;
+					throw new GoodDataApiException(String.Format("No element {0} found for attribute {1}", string.Join(",", item.Value), attribute.Meta.Identifier)
+						,GoodDataErrorType.ElementNotFound);
 				}
 				items.Add(attribute.Meta.Uri, elements.Select(element => element.Uri).ToList());
 			}
@@ -376,7 +376,7 @@ namespace GoodData.API.Api {
 				GetRoles(projectId).FirstOrDefault(r => r.Meta.Identifier.Equals(systemRole, StringComparison.OrdinalIgnoreCase));
 		}
 
-		public void AddUserToProjectWithRoleByTitle(string projectId, string userId, string roleName = SystemRoles.DashboardOnly) {
+		public ProjectUsersUpdateResult AddUserToProjectWithRoleByTitle(string projectId, string userId, string roleName = SystemRoles.DashboardOnly) {
 			CheckAuthentication();
 
 			var projectRole = FindRoleByTitle(projectId, roleName);
@@ -387,18 +387,18 @@ namespace GoodData.API.Api {
 
 			string roleUri = Url.Combine(Constants.PROJECTS_URI, projectId, Constants.PROJECT_ROLES_SUFFIX, projectRole.RoleId);
 
-			ExecuteAddRoleRequest(userId, url, roleUri);
+			return ExecuteAddRoleRequest(userId, url, roleUri);
 		}
 
-		public void AddUserToProjectWithRoleByUri(string projectId, string userId, string roleUri) {
+		public ProjectUsersUpdateResult AddUserToProjectWithRoleByUri(string projectId, string userId, string roleUri) {
 			CheckAuthentication();
 
 			var url = Url.Combine(Config.ServiceUrl, Constants.PROJECTS_URI, projectId, Constants.PROJECT_USERS_SUFFIX);
 
-			ExecuteAddRoleRequest(userId, url, roleUri);
+			return ExecuteAddRoleRequest(userId, url, roleUri);
 		}
 
-		private void ExecuteAddRoleRequest(string userId, string url, string roleUri) {
+		private ProjectUsersUpdateResult ExecuteAddRoleRequest(string userId, string url, string roleUri) {
 			var payload = new ProjectUserRequest {
 				User = new ProjectUserRequest.UserRequest {
 					Content = new ProjectUserRequest.UserRequest.ContentRequest {
@@ -410,7 +410,9 @@ namespace GoodData.API.Api {
 					}
 				}
 			};
-			JsonPostRequest(url, payload);
+			var response = JsonPostRequest(url, payload);
+			var assignResponse = JsonConvert.DeserializeObject(response, typeof(ProjectUserRequestResponse)) as ProjectUserRequestResponse;
+			return assignResponse.ProjectUsersUpdateResult;
 		}
 
 		public void UpdateProjectUserAccess(string projectId, string profileId, bool enabled, string roleName = SystemRoles.DashboardOnly) {

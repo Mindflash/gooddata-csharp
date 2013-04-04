@@ -39,5 +39,20 @@ namespace GoodData.API.Api.Models
 		}
 
 		#endregion
+
+	}
+
+
+	public class ProjectUserRequestResponse {
+		public ProjectUsersUpdateResult ProjectUsersUpdateResult { get; set; }
+	}
+
+	public class ProjectUsersUpdateResult {
+		public List<ProjectUsersUpdateResultUserFailed> Failed { get; set; }
+	}
+
+	public class ProjectUsersUpdateResultUserFailed {
+		public string User { get; set; }
+		public string Message { get; set; }
 	}
 }

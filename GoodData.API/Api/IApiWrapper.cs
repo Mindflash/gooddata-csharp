@@ -1,8 +1,9 @@
 ﻿using System;
+using GoodData.API.Api.Models;
 namespace GoodData.API.Api {
 	public interface IApiWrapper {
-		void AddUserToProjectWithRoleByTitle(string projectId, string userId, string roleName = SystemRoles.DashboardOnly);
-		void AddUserToProjectWithRoleByUri(string projectId, string userId, string roleUri);
+		ProjectUsersUpdateResult AddUserToProjectWithRoleByTitle(string projectId, string userId, string roleName = SystemRoles.DashboardOnly);
+		ProjectUsersUpdateResult AddUserToProjectWithRoleByUri(string projectId, string userId, string roleUri);
 		GoodData.API.Api.Models.AssignUserFiltersUpdateResult AssignUserFilters(string projectId, System.Collections.Generic.List<string> userprofileIds, System.Collections.Generic.List<string> userFilterUris);
 		string CreateProject(string title, string summary, string template = null, string driver = SystemPlatforms.PostGres);
 		string CreateUser(string login, string password, string verfiyPassword, string firstName, string lastName, string ssoProvider = null, string country = "US");
