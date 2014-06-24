@@ -156,6 +156,13 @@ namespace GoodData.API.Api {
 				errorMessage.Append(',');
 				errorMessage.Append(httpResponse.StatusCode);
 				errorMessage.Append("]");
+
+				string XGDCRequest = httpResponse.Headers["X-GDC-REQUEST"];
+				if (XGDCRequest != null) {
+					errorMessage.Append(" - X-GDC-Request: ");
+					errorMessage.Append(XGDCRequest);
+				}
+
 			}
 
 			if (x.Response != null) {
