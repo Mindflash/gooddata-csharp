@@ -9,6 +9,7 @@ namespace GoodData.API.Api {
 		string CreateUser(string login, string password, string verfiyPassword, string firstName, string lastName, string ssoProvider = null, string country = "US");
 		string CreateUserFilterUsingAttributeTitles(string projectId, string filterTitle, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> attributeTitlesWithElementTitles, bool inclusive = true);
 		string CreateUserFilterUsingAttributeUris(string projectId, string filterTitle, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> attributeUrisWithElementTitles, bool inclusive = true);
+		string CreateUserFilterUsingAttributeUrisAndElementUris(string projectId, string filterTitle, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> attributeUrisWithElementUris, bool inclusive = true);
 		void DeleteObject(string projectId, string relativeUri);
 		void DeleteObjectByTitle(string projectId, string title, GoodData.API.ObjectTypes objectType);
 		void DeleteProject(string projectId);

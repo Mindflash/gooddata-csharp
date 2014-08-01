@@ -278,7 +278,7 @@ namespace GoodData.API.Api {
 		}
 
 		public string CreateUserFilterUsingAttributeUris(string projectId, string filterTitle, Dictionary<string, List<string>> attributeUrisWithElementTitles, bool inclusive = true) {
-			
+
 			var items = new Dictionary<string, List<string>>();
 			foreach (var item in attributeUrisWithElementTitles) {
 				var attribute = GetAttributeByUri(item.Key);
@@ -296,9 +296,26 @@ namespace GoodData.API.Api {
 				}
 				if (elements.Count == 0) {
 					throw new GoodDataApiException(String.Format("No element {0} found for attribute {1}", string.Join(",", item.Value), attribute.Meta.Identifier)
-						,GoodDataErrorType.ElementNotFound);
+						, GoodDataErrorType.ElementNotFound);
 				}
 				items.Add(attribute.Meta.Uri, elements.Select(element => element.Uri).ToList());
+			}
+			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, "obj");
+			var payload = new UserFilterRequest(filterTitle, items, inclusive);
+			var response = JsonPostRequest(url, payload);
+			var filterResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
+			return filterResponse.Uri;
+		}
+
+		public string CreateUserFilterUsingAttributeUrisAndElementUris(string projectId, string filterTitle, Dictionary<string, List<string>> attributeUrisWithElementUris, bool inclusive = true) {
+			var items = new Dictionary<string, List<string>>();
+			foreach (var item in attributeUrisWithElementUris) {
+				var attribute = GetAttributeByUri(item.Key);
+				if (attribute == null) {
+					throw new GoodDataApiException(String.Format("No attribute found with uri {0}", item.Key), GoodDataErrorType.AttributeNotFound);
+				}
+
+				items.Add(attribute.Meta.Uri, item.Value);
 			}
 			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, "obj");
 			var payload = new UserFilterRequest(filterTitle, items, inclusive);
