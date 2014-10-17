@@ -324,6 +324,24 @@ namespace GoodData.API.Api {
 			return filterResponse.Uri;
 		}
 
+		public string CreateOverToUserFilterUsingAttributeUrisAndElementUris(string projectId, string filterTitle,
+			Dictionary<string, List<string>> attributeUrisWithElementUris, string overAttributeUri, string toAttributeUri, bool inclusive = true) {
+			var items = new Dictionary<string, List<string>>();
+			foreach (var item in attributeUrisWithElementUris) {
+				var attribute = GetAttributeByUri(item.Key);
+				if (attribute == null) {
+					throw new GoodDataApiException(String.Format("No attribute found with uri {0}", item.Key), GoodDataErrorType.AttributeNotFound);
+				}
+
+				items.Add(attribute.Meta.Uri, item.Value);
+			}
+			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, "obj");
+			var payload = new UserFilterRequest(filterTitle, items, overAttributeUri, toAttributeUri, inclusive);
+			var response = JsonPostRequest(url, payload);
+			var filterResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
+			return filterResponse.Uri;
+		}
+
 		public AssignUserFiltersUpdateResult AssignUserFilters(string projectId, List<string> userprofileIds, List<string> userFilterUris) {
 			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, "userfilters");
 			var payload = new AssignUserFilterRequest(userprofileIds, userFilterUris);

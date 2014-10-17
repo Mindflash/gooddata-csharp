@@ -24,7 +24,12 @@ namespace GoodData.API.Api.Models
 			
 		}
 
-		public UserFilterRequest(string title, Dictionary<string,List<string>> fillterCollection, bool inclusive = true)
+		public UserFilterRequest(string title, Dictionary<string, List<string>> fillterCollection, bool inclusive = true)
+			: this(title, fillterCollection, null, null, inclusive) {
+			
+		}
+
+		public UserFilterRequest(string title, Dictionary<string,List<string>> fillterCollection, string overAttributeUri, string toAttributeUri, bool inclusive = true)
 		{
 			var expressions = new List<string>();
 			foreach (var item in fillterCollection)
@@ -53,6 +58,11 @@ namespace GoodData.API.Api.Models
 					pattern = (expressionType == ExpressionTypes.In) ? "[{0}] IN ([{1}])" : "[{0}] NOT IN ([{1}])";
 					expression = string.Format(pattern, item.Key, string.Join("],[", item.Value));
 				}
+
+				if (overAttributeUri != null && toAttributeUri != null) {
+					expression = "(" + expression + ") OVER [" + overAttributeUri + "] TO [" + toAttributeUri + "]";
+				}
+
 				expressions.Add(expression);
 			}
 

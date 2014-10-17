@@ -10,6 +10,7 @@ namespace GoodData.API.Api {
 		string CreateUserFilterUsingAttributeTitles(string projectId, string filterTitle, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> attributeTitlesWithElementTitles, bool inclusive = true);
 		string CreateUserFilterUsingAttributeUris(string projectId, string filterTitle, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> attributeUrisWithElementTitles, bool inclusive = true);
 		string CreateUserFilterUsingAttributeUrisAndElementUris(string projectId, string filterTitle, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> attributeUrisWithElementUris, bool inclusive = true);
+		string CreateOverToUserFilterUsingAttributeUrisAndElementUris(string projectId, string filterTitle, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> attributeUrisWithElementUris, string overAttributeUri, string toAttributeUri, bool inclusive = true);
 		void DeleteObject(string projectId, string relativeUri);
 		void DeleteObjectByTitle(string projectId, string title, GoodData.API.ObjectTypes objectType);
 		void DeleteProject(string projectId);
