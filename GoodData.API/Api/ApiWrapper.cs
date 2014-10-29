@@ -41,8 +41,12 @@ namespace GoodData.API.Api {
 				}
 			};
 			var response = JsonPostRequest(url, payload);
-			var projectResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
-			return projectResponse.Uri.ExtractId(Constants.PROJECTS_URI);
+			try {
+				var projectResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
+				return projectResponse.Uri.ExtractId(Constants.PROJECTS_URI);
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public List<Project> GetProjects() {
@@ -50,11 +54,15 @@ namespace GoodData.API.Api {
 			var list = new List<Project>();
 			var url = Url.Combine(Config.ServiceUrl, Constants.PROFILE_URI, ProfileId, "projects");
 			var response = GetRequest(url);
-			var projectResponse = JsonConvert.DeserializeObject(response, typeof(ProjectsResponse)) as ProjectsResponse;
-			if (projectResponse != null) {
-				projectResponse.Projects.ForEach(p => list.Add(p.Project));
+			try {
+				var projectResponse = JsonConvert.DeserializeObject(response, typeof(ProjectsResponse)) as ProjectsResponse;
+				if (projectResponse != null) {
+					projectResponse.Projects.ForEach(p => list.Add(p.Project));
+				}
+				return list;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
 			}
-			return list;
 		}
 
 		public void DeleteProject(string projectId) {
@@ -84,8 +92,12 @@ namespace GoodData.API.Api {
 			var paging = string.Format("?count={0}&offset={1}", count, offset);
 			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, Constants.PROJECT_USERFILTERS_SUFFIX, paging);
 			var response = GetRequest(url);
-			var ProjectUserFiltersResponse = JsonConvert.DeserializeObject(response, typeof(ProjectUserFiltersResponse)) as ProjectUserFiltersResponse;
-			return ProjectUserFiltersResponse.UserFilters;
+			try {
+				var ProjectUserFiltersResponse = JsonConvert.DeserializeObject(response, typeof(ProjectUserFiltersResponse)) as ProjectUserFiltersResponse;
+				return ProjectUserFiltersResponse.UserFilters;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		#endregion
@@ -102,8 +114,12 @@ namespace GoodData.API.Api {
 				}
 			};
 			var response = JsonPostRequest(url, payload);
-			dynamic exportResponse = JsonConvert.DeserializeObject<object>(response);
-			return exportResponse.reportResult2.meta.uri;
+			try {
+				dynamic exportResponse = JsonConvert.DeserializeObject<object>(response);
+				return exportResponse.reportResult2.meta.uri;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public string ExportReport(string reportUri, ExportFormatTypes exportFormatType = ExportFormatTypes.csv) {
@@ -118,8 +134,12 @@ namespace GoodData.API.Api {
 				}
 			};
 			var response = JsonPostRequest(url, payload);
-			var exportResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
-			return exportResponse.Uri;
+			try {
+				var exportResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
+				return exportResponse.Uri;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public ExportArtifact ExportProject(string projectId, bool exportUsers = false, bool exportData = false) {
@@ -133,8 +153,12 @@ namespace GoodData.API.Api {
 				}
 			};
 			var response = JsonPostRequest(url, payload);
-			var exportResponse = JsonConvert.DeserializeObject(response, typeof(ExportResponse)) as ExportResponse;
-			return exportResponse.ExportArtifact;
+			try {
+				var exportResponse = JsonConvert.DeserializeObject(response, typeof(ExportResponse)) as ExportResponse;
+				return exportResponse.ExportArtifact;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public ExportArtifact ExportPartials(string projectId, List<string> uris) {
@@ -147,8 +171,12 @@ namespace GoodData.API.Api {
 				}
 			};
 			var response = JsonPostRequest(url, payload);
-			var exportResponse = JsonConvert.DeserializeObject(response, typeof(PartialExportResponse)) as PartialExportResponse;
-			return exportResponse.PartialMDArtifact;
+			try {
+				var exportResponse = JsonConvert.DeserializeObject(response, typeof(PartialExportResponse)) as PartialExportResponse;
+				return exportResponse.PartialMDArtifact;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public string ImportProject(string projectId, string token) {
@@ -161,8 +189,12 @@ namespace GoodData.API.Api {
 				}
 			};
 			var response = JsonPostRequest(url, payload);
-			var importResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
-			return importResponse.Uri;
+			try {
+				var importResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
+				return importResponse.Uri;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public string ImportPartials(string projectId, string token, bool overwriteNewer = true,
@@ -178,24 +210,36 @@ namespace GoodData.API.Api {
 				}
 			};
 			var response = JsonPostRequest(url, payload);
-			var importResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
-			return importResponse.Uri;
+			try {
+				var importResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
+				return importResponse.Uri;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public bool PollStatus(string uri) {
 			CheckAuthentication();
 			var url = Url.Combine(Config.ServiceUrl, uri);
 			var response = GetRequest(url);
-			var taskResponse = JsonConvert.DeserializeObject(response, typeof(TaskResponse)) as TaskResponse;
-			return (taskResponse.TaskState.Status == Enum.GetName(typeof(TaskStates), TaskStates.OK));
+			try {
+				var taskResponse = JsonConvert.DeserializeObject(response, typeof(TaskResponse)) as TaskResponse;
+				return (taskResponse.TaskState.Status == Enum.GetName(typeof(TaskStates), TaskStates.OK));
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public bool PollPartialStatus(string uri) {
 			CheckAuthentication();
 			var url = Url.Combine(Config.ServiceUrl, uri);
 			var response = GetRequest(url);
-			var taskResponse = JsonConvert.DeserializeObject(response, typeof(PartialTaskResponse)) as PartialTaskResponse;
-			return (taskResponse.wTaskStatus.Status == "OK");
+			try {
+				var taskResponse = JsonConvert.DeserializeObject(response, typeof(PartialTaskResponse)) as PartialTaskResponse;
+				return (taskResponse.wTaskStatus.Status == "OK");
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public WebResponse GetFile(string uri) {
@@ -238,8 +282,12 @@ namespace GoodData.API.Api {
 				}
 			};
 			var response = JsonPostRequest(url, payload);
-			var userResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
-			return userResponse.Uri.ExtractId(Constants.PROFILE_URI);
+			try {
+				var userResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
+				return userResponse.Uri.ExtractId(Constants.PROFILE_URI);
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public void DeleteUserFilterByTitle(string projectId, string filterTitle) {
@@ -273,8 +321,12 @@ namespace GoodData.API.Api {
 			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, "obj");
 			var payload = new UserFilterRequest(filterTitle, items, inclusive);
 			var response = JsonPostRequest(url, payload);
-			var filterResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
-			return filterResponse.Uri;
+			try {
+				var filterResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
+				return filterResponse.Uri;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public string CreateUserFilterUsingAttributeUris(string projectId, string filterTitle, Dictionary<string, List<string>> attributeUrisWithElementTitles, bool inclusive = true) {
@@ -303,8 +355,12 @@ namespace GoodData.API.Api {
 			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, "obj");
 			var payload = new UserFilterRequest(filterTitle, items, inclusive);
 			var response = JsonPostRequest(url, payload);
-			var filterResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
-			return filterResponse.Uri;
+			try {
+				var filterResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
+				return filterResponse.Uri;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public string CreateUserFilterUsingAttributeUrisAndElementUris(string projectId, string filterTitle, Dictionary<string, List<string>> attributeUrisWithElementUris, bool inclusive = true) {
@@ -320,8 +376,12 @@ namespace GoodData.API.Api {
 			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, "obj");
 			var payload = new UserFilterRequest(filterTitle, items, inclusive);
 			var response = JsonPostRequest(url, payload);
-			var filterResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
-			return filterResponse.Uri;
+			try {
+				var filterResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
+				return filterResponse.Uri;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public string CreateOverToUserFilterUsingAttributeUrisAndElementUris(string projectId, string filterTitle,
@@ -338,16 +398,24 @@ namespace GoodData.API.Api {
 			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, "obj");
 			var payload = new UserFilterRequest(filterTitle, items, overAttributeUri, toAttributeUri, inclusive);
 			var response = JsonPostRequest(url, payload);
-			var filterResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
-			return filterResponse.Uri;
+			try {
+				var filterResponse = JsonConvert.DeserializeObject(response, typeof(UriResponse)) as UriResponse;
+				return filterResponse.Uri;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public AssignUserFiltersUpdateResult AssignUserFilters(string projectId, List<string> userprofileIds, List<string> userFilterUris) {
 			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, "userfilters");
 			var payload = new AssignUserFilterRequest(userprofileIds, userFilterUris);
 			var response = JsonPostRequest(url, payload);
-			var assignResponse = JsonConvert.DeserializeObject(response, typeof(AssignUserFilterResponse)) as AssignUserFilterResponse;
-			return assignResponse.UserFiltersUpdateResult;
+			try {
+				var assignResponse = JsonConvert.DeserializeObject(response, typeof(AssignUserFilterResponse)) as AssignUserFilterResponse;
+				return assignResponse.UserFiltersUpdateResult;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public List<Entry> FindObjectByTitle(string projectId, string title, ObjectTypes objectType) {
@@ -370,40 +438,56 @@ namespace GoodData.API.Api {
 			var response = GetRequest(url);
 			var settings = new JsonSerializerSettings();
 			settings.Converters.Add(new BoolConverter());
-			var attributeResponse = JsonConvert.DeserializeObject(response, typeof(AttributeResponse), settings) as AttributeResponse;
-			return attributeResponse.Attribute;
+			try {
+				var attributeResponse = JsonConvert.DeserializeObject(response, typeof(AttributeResponse), settings) as AttributeResponse;
+				return attributeResponse.Attribute;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public List<Element> GetAttributeElements(string projectId, Models.Attribute attribute) {
 			var url = Url.Combine(Config.ServiceUrl, attribute.Content.DisplayForms[0].Links.Elements);
 			var response = GetRequest(url);
-			var attributeElemntsResponse = JsonConvert.DeserializeObject(response, typeof(AttributeElementsResponse)) as AttributeElementsResponse;
-			return attributeElemntsResponse.AttributeElements.Elements;
+			try {
+				var attributeElemntsResponse = JsonConvert.DeserializeObject(response, typeof(AttributeElementsResponse)) as AttributeElementsResponse;
+				return attributeElemntsResponse.AttributeElements.Elements;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public Element FindAttributeElementByTitle(string projectId, Models.Attribute attribute, string elementTitle) {
 			var url = Url.Combine(Config.ServiceUrl, attribute.Content.DisplayForms[0].Links.Elements);
 			var response = FormPostRequest(url, new NameValueCollection { { "filter", elementTitle } });
-			var attributeElemntsResponse = JsonConvert.DeserializeObject(response, typeof(AttributeElementsResponse)) as AttributeElementsResponse;
-			return attributeElemntsResponse
-				.AttributeElements
-				.Elements
-				.FirstOrDefault(x => x.Title.Equals(elementTitle, StringComparison.OrdinalIgnoreCase));
+			try {
+				var attributeElemntsResponse = JsonConvert.DeserializeObject(response, typeof(AttributeElementsResponse)) as AttributeElementsResponse;
+				return attributeElemntsResponse
+					.AttributeElements
+					.Elements
+					.FirstOrDefault(x => x.Title.Equals(elementTitle, StringComparison.OrdinalIgnoreCase));
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public List<ProjectRole> GetRoles(string projectId) {
 			var url = Url.Combine(Config.ServiceUrl, Constants.PROJECTS_URI, projectId, Constants.PROJECT_ROLES_SUFFIX);
 			var response = GetRequest(url);
-			var rolesResponse = JsonConvert.DeserializeObject(response, typeof(RolesResponse)) as RolesResponse;
-			var list = new List<ProjectRole>();
-			foreach (var uri in rolesResponse.ProjectRoles.Roles) {
-				var rawRoleResponse = GetRequest(Url.Combine(Config.ServiceUrl, uri));
-				var roleResponse = JsonConvert.DeserializeObject(rawRoleResponse, typeof(RoleResponse)) as RoleResponse;
-				roleResponse.ProjectRole.RoleId = uri.ExtractObjectId();
-				roleResponse.ProjectRole.Meta.Uri = uri;
-				list.Add(roleResponse.ProjectRole);
+			try {
+				var rolesResponse = JsonConvert.DeserializeObject(response, typeof(RolesResponse)) as RolesResponse;
+				var list = new List<ProjectRole>();
+				foreach (var uri in rolesResponse.ProjectRoles.Roles) {
+					var rawRoleResponse = GetRequest(Url.Combine(Config.ServiceUrl, uri));
+					var roleResponse = JsonConvert.DeserializeObject(rawRoleResponse, typeof(RoleResponse)) as RoleResponse;
+					roleResponse.ProjectRole.RoleId = uri.ExtractObjectId();
+					roleResponse.ProjectRole.Meta.Uri = uri;
+					list.Add(roleResponse.ProjectRole);
+				}
+				return list;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
 			}
-			return list;
 		}
 
 		public ProjectRole FindRoleByTitle(string projectId, string systemRole = SystemRoles.DashboardOnly) {
@@ -446,8 +530,12 @@ namespace GoodData.API.Api {
 				}
 			};
 			var response = JsonPostRequest(url, payload);
-			var assignResponse = JsonConvert.DeserializeObject(response, typeof(ProjectUserRequestResponse)) as ProjectUserRequestResponse;
-			return assignResponse.ProjectUsersUpdateResult;
+			try {
+				var assignResponse = JsonConvert.DeserializeObject(response, typeof(ProjectUserRequestResponse)) as ProjectUserRequestResponse;
+				return assignResponse.ProjectUsersUpdateResult;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public void UpdateProjectUserAccess(string projectId, string profileId, bool enabled, string roleName = SystemRoles.DashboardOnly) {
@@ -510,6 +598,8 @@ namespace GoodData.API.Api {
 				if (nextSetUrl != null) {
 					GetDomainUsers(Url.Combine(Config.ServiceUrl, nextSetUrl), ref list);
 				}
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
 			} catch (Exception ex) {
 				Logger.Error(ex);
 			}
@@ -520,11 +610,15 @@ namespace GoodData.API.Api {
 			var list = new List<UserWrapper>();
 			var url = Url.Combine(Config.ServiceUrl, Constants.PROJECTS_URI, projectId, Constants.DOMAIN_USERS_SUFFIX);
 			var response = GetRequest(url);
-			var usersResponse = JsonConvert.DeserializeObject(response, typeof(UserResponse)) as UserResponse;
-			if (usersResponse != null) {
-				list.AddRange(usersResponse.Users);
+			try {
+				var usersResponse = JsonConvert.DeserializeObject(response, typeof(UserResponse)) as UserResponse;
+				if (usersResponse != null) {
+					list.AddRange(usersResponse.Users);
+				}
+				return list;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
 			}
-			return list;
 		}
 
 		public User FindProjectUsersByEmail(string projectId, string email) {
@@ -542,9 +636,13 @@ namespace GoodData.API.Api {
 				foreach (var role in userWrapper.User.Content.UserRoles) {
 					var url = Url.Combine(Config.ServiceUrl, role);
 					var response = GetRequest(url);
-					dynamic roleResponse = JsonConvert.DeserializeObject<object>(response);
-					var roleName = (string)roleResponse.projectRole.meta.title;
-					roleNames.Add(roleName);
+					try {
+						dynamic roleResponse = JsonConvert.DeserializeObject<object>(response);
+						var roleName = (string)roleResponse.projectRole.meta.title;
+						roleNames.Add(roleName);
+					} catch (JsonSerializationException) {
+						throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+					}
 				}
 				userWrapper.User.RoleNames = roleNames;
 
@@ -556,11 +654,15 @@ namespace GoodData.API.Api {
 					if (userfilter.Title.Contains(userWrapper.User.Content.Email)) {
 						var url = Url.Combine(Config.ServiceUrl, userfilter.Link);
 						var response = GetRequest(url);
-						var userFilterResponse =
-							JsonConvert.DeserializeObject(response, typeof(UserFilterResponse)) as UserFilterResponse;
-						var elements = userFilterResponse.UserFilter.Content.Objects.Where(x => x.Category == "attributeElement");
-						var titles = elements.Select(userFilterObject => userFilterObject.Title).ToList();
-						userfilterNames.Add(userfilter.Title.Replace(userWrapper.User.Content.Email + " - ", "") + ": " + string.Join(", ", titles));
+						try {
+							var userFilterResponse =
+								JsonConvert.DeserializeObject(response, typeof(UserFilterResponse)) as UserFilterResponse;
+							var elements = userFilterResponse.UserFilter.Content.Objects.Where(x => x.Category == "attributeElement");
+							var titles = elements.Select(userFilterObject => userFilterObject.Title).ToList();
+							userfilterNames.Add(userfilter.Title.Replace(userWrapper.User.Content.Email + " - ", "") + ": " + string.Join(", ", titles));
+						} catch (JsonSerializationException) {
+							throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+						}
 					}
 				}
 				userWrapper.User.UserFilterNames = userfilterNames;
@@ -578,9 +680,13 @@ namespace GoodData.API.Api {
 			foreach (var role in userWrapper.User.Content.UserRoles) {
 				var url = Url.Combine(Config.ServiceUrl, role);
 				var response = GetRequest(url);
-				dynamic roleResponse = JsonConvert.DeserializeObject<object>(response);
-				var roleName = (string)roleResponse.projectRole.meta.title;
-				roleNames.Add(roleName);
+				try {
+					dynamic roleResponse = JsonConvert.DeserializeObject<object>(response);
+					var roleName = (string)roleResponse.projectRole.meta.title;
+					roleNames.Add(roleName);
+				} catch (JsonSerializationException) {
+					throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+				}
 			}
 			userWrapper.User.RoleNames = roleNames;
 
@@ -592,10 +698,14 @@ namespace GoodData.API.Api {
 				if (userfilter.Title.Contains(email)) {
 					var url = Url.Combine(Config.ServiceUrl, userfilter.Link);
 					var response = GetRequest(url);
-					var userFilterResponse = JsonConvert.DeserializeObject(response, typeof(UserFilterResponse)) as UserFilterResponse;
-					var elements = userFilterResponse.UserFilter.Content.Objects.Where(x => x.Category == "attributeElement");
-					var titles = elements.Select(userFilterObject => userFilterObject.Title).ToList();
-					userfilterNames.Add(userfilter.Title.Replace(email + " - ", "") + ": " + string.Join(", ", titles));
+					try {
+						var userFilterResponse = JsonConvert.DeserializeObject(response, typeof(UserFilterResponse)) as UserFilterResponse;
+						var elements = userFilterResponse.UserFilter.Content.Objects.Where(x => x.Category == "attributeElement");
+						var titles = elements.Select(userFilterObject => userFilterObject.Title).ToList();
+						userfilterNames.Add(userfilter.Title.Replace(email + " - ", "") + ": " + string.Join(", ", titles));
+					} catch (JsonSerializationException) {
+						throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+					}
 				}
 			}
 			userWrapper.User.UserFilterNames = userfilterNames;
@@ -627,18 +737,26 @@ namespace GoodData.API.Api {
 
 			var payload = identifiers;
 			var response = JsonPostRequest(url, payload);
-			return JsonConvert.DeserializeObject(response, typeof(IdentifiersResponse)) as IdentifiersResponse;
+			try {
+				return JsonConvert.DeserializeObject(response, typeof(IdentifiersResponse)) as IdentifiersResponse;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public UsingResponse GetDependancies(string projectId, string objectId, bool? filterByReport = null) {
 			CheckAuthentication();
 			var url = Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, "using", objectId);
 			var response = GetRequest(url);
-			var usingResponse = JsonConvert.DeserializeObject(response, typeof(UsingResponse)) as UsingResponse;
-			if (usingResponse != null) {
-				return usingResponse;
+			try {
+				var usingResponse = JsonConvert.DeserializeObject(response, typeof(UsingResponse)) as UsingResponse;
+				if (usingResponse != null) {
+					return usingResponse;
+				}
+				return null;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
 			}
-			return null;
 		}
 
 		public string GetObjectIdentifier(string objectLink) {
@@ -653,7 +771,11 @@ namespace GoodData.API.Api {
 			CheckAuthentication();
 			var url = Url.Combine(Config.ServiceUrl, objectLink);
 			var response = GetRequest(url);
-			return JsonConvert.DeserializeObject<object>(response);
+			try {
+				return JsonConvert.DeserializeObject<object>(response);
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public List<Entry> Query(string projectId, ObjectTypes objectTypes) {
@@ -670,8 +792,12 @@ namespace GoodData.API.Api {
 			var response = GetRequest(Url.Combine(Config.ServiceUrl, Constants.MD_URI, projectId, fragment));
 			var settings = new JsonSerializerSettings();
 			settings.Converters.Add(new BoolConverter());
-			var queryResponse = JsonConvert.DeserializeObject(response, typeof(QueryResponse), settings) as QueryResponse;
-			return queryResponse != null ? queryResponse.Query.Entries : null;
+			try {
+				var queryResponse = JsonConvert.DeserializeObject(response, typeof(QueryResponse), settings) as QueryResponse;
+				return queryResponse != null ? queryResponse.Query.Entries : null;
+			} catch (JsonSerializationException) {
+				throw new Exception("Error deserializing JSON after call to GoodData API.\n\nOriginal response: " + response);
+			}
 		}
 
 		public List<string> GetQueryLinks(string projectId, ObjectTypes objectTypes) {
